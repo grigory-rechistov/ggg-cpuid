@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <cstdint>
 #include <vector>
+#include <string.h>
 #include "optionparser.h"
 
 struct cpuid_result {
@@ -41,58 +42,68 @@ cpuid_result do_cpuid(uint32_t leaf, uint32_t subleaf) {
     return r;
 }
 
-int main(int argc, char **argv) {
-    
-    std::vector<std::pair<uint32_t, uint32_t>> l_s_pairs = { 
-             {0, 0},
-             {1, 0},
-             {2, 0},
-             {3, 0},
-             {4, 0},
-             {4, 1},
-             {4, 2},
-             {4, 3},
-             {4, 4},
-             {5, 0},
-             {6, 0},
-             {7, 0},
-             {7, 1},
-             {8, 0},
-             {9, 0},
-           {0xa, 0},
-           {0xb, 0},
-           {0xb, 1},
-           {0xb, 2},
-           {0xb, 3},
-           {0xc, 0},
-           {0xd, 0},
-           {0xd, 1},
-           {0xd, 2},
-           {0xd, 3},
-           {0xd, 4},
-           {0xd, 5},
-           {0xd, 6},
-           {0xd, 7},
-           {0xd, 8},
-           {0xd, 9},
-           {0xd,10},
-           {0xe, 0},
-           {0xf, 0},
-          {0x10, 0},
-          {0x11, 0},
-          {0x12, 0},
+static void cpuid_leaf(uint32_t leaf) {
+    int subleaf = 0;
 
-    {0x80000000, 0},
-    {0x80000001, 0},
-    {0x80000002, 0},
-    {0x80000003, 0},
-    {0x80000004, 0},
-    {0x80000005, 0},
-    {0x80000006, 0},
-    {0x80000007, 0},
-    {0x80000008, 0},
-    }; // l_s_pairs
-    
+    cpuid_result last_subleaf;
+    memset(&last_subleaf, 0, sizeof(last_subleaf));
+
+    for (subleaf = 0; subleaf > -1; ++subleaf) {
+        cpuid_result r = do_cpuid(leaf, subleaf);
+
+        // There is no standart way to determine a count of subleaves.
+        // We use assumption that there is no subleaves with the same values.
+        // So if we come on the subleaf with value like in the previous subleaf
+        // we deside that there is no more valid subleaves.
+
+        switch(leaf) {
+            case 0x7:
+                // EAX: Reports the maximum input value for
+                // supported leaf 7 sub-leaves.
+                if (subleaf >= r.eax)
+                    return;
+            case 0xb:
+                // Most of Leaf 0BH output depends on the initial value in ECX.
+                // The EDX output of leaf 0BH is always valid and does not vary
+                // with input value in ECX.
+                // Output value in ECX[7:0] always equals input value in
+                // ECX[7:0].
+                // For sub-leaves that return an invalid level-type of 0 in
+                // ECX[15:8]; EAX and EBX will return 0.
+                // If an input value n in ECX returns the invalid level-type of
+                // 0 in ECX[15:8], other input values with ECX >
+                // n also return 0 in ECX[15:8].
+                if ((r.eax || r.ebx || (r.ecx & ~0xff)) == 0)
+                    return;
+            default:
+                if ((r.eax || r.ebx || r.ecx || r.edx) == 0)
+                    return;
+
+                if (!memcmp(&last_subleaf, &r, sizeof(last_subleaf)))
+                    return;
+        }
+        printf("  %#10x  %#10x  0x%08x  0x%08x  0x%08x  0x%08x\n", leaf, subleaf, r.eax, r.ebx, r.ecx, r.edx);
+        last_subleaf = r;
+    }
+}
+
+static void cpuid_level(uint32_t level) {
+    cpuid_result r = do_cpuid(level, 0);
+
+    int leaf;
+    for (leaf = level; leaf < r.eax; ++leaf) {
+        cpuid_leaf(leaf);
+    }
+}
+
+static void dump_cpuid() {
+    printf("Leaf             Subleaf         EAX         EBX        ECX          EDX\n");
+    printf("------------------------------------------------------------------------\n");
+    cpuid_level(0);
+    cpuid_level(0x80000000);
+}
+
+int main(int argc, char **argv) {
     // TODO add option checking
     enum  optionIndex { UNKNOWN, HELP, LEAF, SUBLEAF };
     const option::Descriptor usage[] =
@@ -119,32 +130,7 @@ int main(int argc, char **argv) {
     }
     for (option::Option* opt = options[UNKNOWN]; opt; opt = opt->next())
       std::cout << "Unknown option: " << opt->name << "\n";   
-    
-    
-    
-    // Do the work
-    std::cout << "Leaf             Subleaf         EAX         EBX        ECX          EDX" << std::endl;
-    std::cout << "------------------------------------------------------------------------" << std::endl;
-    for (auto l_s: l_s_pairs) {
-        auto leaf = l_s.first;
-        auto subleaf = l_s.second;
-        auto r = do_cpuid(leaf, subleaf);
-        if (r.taken) {
-            std::cout << std::hex << std::showbase << std::setfill(' ') << std::setw(12)
-                      << leaf 
-                      << std::hex << std::showbase << std::setfill(' ') << std::setw(12)
-                      << subleaf 
-                      << std::hex << std::showbase << std::setfill(' ') << std::setw(12)
-                      << r.eax 
-                      << std::hex << std::showbase << std::setfill(' ') << std::setw(12)
-                      << r.ebx 
-                      << std::hex << std::showbase << std::setfill(' ') << std::setw(12)
-                      << r.ecx 
-                      << std::hex << std::showbase << std::setfill(' ') << std::setw(12)
-                      << r.edx 
-                      << std::endl;
-        }
-    }
-    
+
+    dump_cpuid();
     return 0;
 }
