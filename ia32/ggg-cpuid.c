@@ -50,11 +50,7 @@ static cpuid_result do_cpuid(uint32_t leaf, uint32_t subleaf) {
         : "a"(leaf), "c"(subleaf)
         );
 
-    cpuid_result r;
-    r.eax = eax;
-    r.ebx = ebx;
-    r.ecx = ecx;
-    r.edx = edx;
+    cpuid_result r = {eax, ebx, ecx, edx};
     return r;
 }
 
