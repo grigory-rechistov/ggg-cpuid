@@ -68,11 +68,6 @@ static void cpuid_leaf(uint32_t leaf) {
     for (subleaf = 0; subleaf > -1; ++subleaf) {
         cpuid_result r = do_cpuid(leaf, subleaf);
 
-        // There is no standard way to determine a count of subleaves.
-        // We use assumption that there is no subleaves with the same values.
-        // So if we come on the subleaf with value like in the previous subleaf
-        // we deside that there is no more valid subleaves.
-
         switch (leaf) {
             case 0x7:
                 // EAX: Reports the maximum input value for
