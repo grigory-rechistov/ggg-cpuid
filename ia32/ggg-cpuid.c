@@ -161,7 +161,7 @@ int main(int argc, char **argv) {
                 }
 
                 if (endptr == optarg) {
-                    fprintf(stderr, "No digits were found in leaf defenition\n");
+                    fprintf(stderr, "No digits were found in leaf definition\n");
                     return 1;
                 }
 
@@ -179,7 +179,7 @@ int main(int argc, char **argv) {
                 }
 
                 if (endptr == optarg) {
-                    fprintf(stderr, "No digits were found in subleaf defenition\n");
+                    fprintf(stderr, "No digits were found in subleaf definition\n");
                     return 1;
                 }
 
