@@ -101,6 +101,12 @@ static void cpuid_leaf(uint32_t leaf) {
                 // in leaf 14H.
                 if (subleaf > r.eax)
                     return;
+            case 0x1f:
+                // ECX[15:8] is domain type. Once it is zero, no more valid
+                // leaves are left.
+                if ((r.ecx & 0xff00U) == 0)
+                    return;
+
             default:
                 if ((r.eax || r.ebx || r.ecx || r.edx) == 0)
                     return;
