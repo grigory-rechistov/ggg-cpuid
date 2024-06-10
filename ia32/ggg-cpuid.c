@@ -108,7 +108,7 @@ static void cpuid_leaf(uint32_t leaf) {
                     return;
                 break;
         }
-            print_subleaf(leaf, subleaf, r);
+        print_subleaf(leaf, subleaf, r);
         last_subleaf = r;
     }
 }
