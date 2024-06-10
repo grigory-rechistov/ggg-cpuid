@@ -60,11 +60,10 @@ static void print_subleaf(uint32_t leaf, uint32_t subleaf, cpuid_result r) {
 }
 
 static void cpuid_leaf(uint32_t leaf) {
-    int subleaf = 0;
 
     cpuid_result last_subleaf = {0};
 
-    for (subleaf = 0; subleaf > -1; ++subleaf) {
+    for (uint32_t subleaf = 0; subleaf > -1; ++subleaf) {
         cpuid_result r = do_cpuid(leaf, subleaf);
 
         switch (leaf) {
