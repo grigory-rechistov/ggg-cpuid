@@ -115,8 +115,9 @@ static void cpuid_leaf(uint32_t leaf) {
 
 static void cpuid_level(uint32_t level) {
     cpuid_result r = do_cpuid(level, 0);
+    uint32_t max_leaf = r.eax;
 
-    for (int leaf = level; leaf <= r.eax; ++leaf) {
+    for (int leaf = level; leaf <= max_leaf; ++leaf) {
         cpuid_leaf(leaf);
     }
 }
