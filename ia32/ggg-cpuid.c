@@ -73,6 +73,7 @@ static void cpuid_leaf(uint32_t leaf) {
                 // supported leaf 7 sub-leaves.
                 if (subleaf > r.eax)
                     return;
+                break;
             case 0xb:
                 // Most of Leaf 0BH output depends on the initial value in ECX.
                 // The EDX output of leaf 0BH is always valid and does not vary
@@ -86,23 +87,26 @@ static void cpuid_leaf(uint32_t leaf) {
                 // n also return 0 in ECX[15:8].
                 if ((r.eax || r.ebx || (r.ecx & ~0xff)) == 0)
                     return;
+                break;
             case 0x14:
                 // EAX: Reports the maximum number sub-leaves that are supported
                 // in leaf 14H.
                 if (subleaf > r.eax)
                     return;
+                break;
             case 0x1f:
                 // ECX[15:8] is domain type. Once it is zero, no more valid
                 // leaves are left.
                 if ((r.ecx & 0xff00U) == 0)
                     return;
-
+                break;
             default:
                 if ((r.eax || r.ebx || r.ecx || r.edx) == 0)
                     return;
 
                 if (!memcmp(&last_subleaf, &r, sizeof(last_subleaf)))
                     return;
+                break;
         }
             print_subleaf(leaf, subleaf, r);
         last_subleaf = r;
