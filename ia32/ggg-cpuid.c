@@ -33,14 +33,14 @@
 #include <stdlib.h>
 #include <limits.h>
 
-typedef struct cpuid_result_t {
+typedef struct {
     uint32_t eax;
     uint32_t ebx;
     uint32_t ecx;
     uint32_t edx;
-} cpuid_result;
+} cpuid_result_t;
 
-static cpuid_result do_cpuid(uint32_t leaf, uint32_t subleaf) {
+static cpuid_result_t do_cpuid(uint32_t leaf, uint32_t subleaf) {
     uint32_t eax, ebx, ecx, edx;
     __asm__ __volatile__ (
         "movl $0, %%ebx \n"
@@ -50,11 +50,11 @@ static cpuid_result do_cpuid(uint32_t leaf, uint32_t subleaf) {
         : "a"(leaf), "c"(subleaf)
         );
 
-    cpuid_result r = {eax, ebx, ecx, edx};
+    cpuid_result_t r = {eax, ebx, ecx, edx};
     return r;
 }
 
-static void print_subleaf(uint32_t leaf, uint32_t subleaf, cpuid_result r) {
+static void print_subleaf(uint32_t leaf, uint32_t subleaf, cpuid_result_t r) {
     printf("  %#10x  %#10x  %#10x  %#10x  %#10x  %#10x\n",
            leaf, subleaf, r.eax, r.ebx, r.ecx, r.edx);
 }
@@ -62,10 +62,10 @@ static void print_subleaf(uint32_t leaf, uint32_t subleaf, cpuid_result r) {
 static void cpuid_leaf(uint32_t leaf) {
     const uint32_t max_subleaf_tried = 0x1000; /* Arbitrary limit */
 
-    cpuid_result last_subleaf = {0};
+    cpuid_result_t last_subleaf = {0};
 
     for (uint32_t subleaf = 0; subleaf < max_subleaf_tried; ++subleaf) {
-        cpuid_result r = do_cpuid(leaf, subleaf);
+        cpuid_result_t r = do_cpuid(leaf, subleaf);
 
         switch (leaf) {
             case 0x7:
@@ -114,7 +114,7 @@ static void cpuid_leaf(uint32_t leaf) {
 }
 
 static void cpuid_level(uint32_t level) {
-    cpuid_result r = do_cpuid(level, 0);
+    cpuid_result_t r = do_cpuid(level, 0);
     uint32_t max_leaf = r.eax;
 
     for (int leaf = level; leaf <= max_leaf; ++leaf) {
@@ -202,7 +202,7 @@ int main(int argc, char **argv) {
 
     if (leaf != 0xffffffff) {
         if (subleaf != 0xffffffff) {
-            cpuid_result r = do_cpuid(leaf, subleaf);
+            cpuid_result_t r = do_cpuid(leaf, subleaf);
             print_subleaf(leaf, subleaf, r);
         } else {
             cpuid_leaf(leaf);
